@@ -1,4 +1,4 @@
-name: Build CI
+name: 构建持续集成
 
 on:
   push:
@@ -9,16 +9,16 @@ on:
   workflow_dispatch:
     inputs:
       release:
-        description: 'Push a new release'
+        description: '发布新版本'
         required: false
         default: 'false'
       version:
-        description: 'release version'
+        description: '版本号'
         required: false
         default: '2024051900'
 
 jobs:
-  Build-on-Ubuntu:
+  在Ubuntu上构建:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -26,18 +26,18 @@ jobs:
       TZ: UTC-8
 
     steps:
-      - name: Checkout
+      - name: 检出代码
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
           fetch-depth: 1
 
-      - name: Update system and install dependencies
+      - name: 更新系统并安装依赖
         run: |
           sudo apt update -y
           sudo apt install llvm -y
 
-      - name: Build kpm
+      - name: 构建kpm
         run: |
           mkdir target
 
@@ -46,7 +46,7 @@ jobs:
             mv ${dir}*.kpm target
           done
 
-      - name: Upload artifact
+      - name: 上传构建产物
         if: success()
         uses: lzghzr/upload-artifact@405e6269d5b1feb22bf2a044deb7950596bed6da
         with:
@@ -54,14 +54,14 @@ jobs:
           artifact-per-file: true
           artifact-name-rule: ${name}
 
-      - name: Upload release
+      - name: 发布版本
         if: github.event.inputs.release == 'true' && success() && !cancelled()
         uses: ncipollo/release-action@v1.14.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: ${{ github.event.inputs.version }}
           tag: ${{ github.event.inputs.version }}
-          body: This release is built by github-action.
+          body: 本版本由GitHub Action自动构建
           artifacts: "target/*.kpm"
           allowUpdates: true
           makeLatest: true
