@@ -1,4 +1,4 @@
-name: 构建持续集成
+name: Build CI
 
 on:
   push:
@@ -13,12 +13,12 @@ on:
         required: false
         default: 'false'
       version:
-        description: '版本号'
+        description: '发行版'
         required: false
         default: '2024051900'
 
 jobs:
-  在Ubuntu上构建:
+  Build-on-Ubuntu:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -26,18 +26,18 @@ jobs:
       TZ: UTC-8
 
     steps:
-      - name: 检出代码
+      - name: 查看
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
           fetch-depth: 1
 
-      - name: 更新系统并安装依赖
+      - name: 更新系统并安装依赖项
         run: |
           sudo apt update -y
           sudo apt install llvm -y
 
-      - name: 构建kpm
+      - name: 建造 kpm
         run: |
           mkdir target
 
@@ -46,7 +46,7 @@ jobs:
             mv ${dir}*.kpm target
           done
 
-      - name: 上传构建产物
+      - name: 上传工件
         if: success()
         uses: lzghzr/upload-artifact@405e6269d5b1feb22bf2a044deb7950596bed6da
         with:
@@ -54,14 +54,14 @@ jobs:
           artifact-per-file: true
           artifact-name-rule: ${name}
 
-      - name: 发布版本
+      - name: 上传发布
         if: github.event.inputs.release == 'true' && success() && !cancelled()
         uses: ncipollo/release-action@v1.14.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: ${{ github.event.inputs.version }}
           tag: ${{ github.event.inputs.version }}
-          body: 本版本由GitHub Action自动构建
+          body: This release is built by github-action.
           artifacts: "target/*.kpm"
           allowUpdates: true
           makeLatest: true
